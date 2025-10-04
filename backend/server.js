@@ -3,8 +3,11 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import admin from "./config/firebase-admin.js";
+import axios from "axios";
 
 // Load environment variables
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,13 +16,45 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname, "../frontend/public")));
 
+const verifyRecaptcha = async (req, res, next) => {
+  const { recaptchaToken } = req.body;
+
+  if (!recaptchaToken) {
+    return res.status(400).json({ error: "recaptcha token required!" });
+  }
+
+  try {
+    const response = await axios.post(
+      `https://www.google.com/recaptcha/api/siteverify`,
+      null,
+      {
+        params: {
+          secret: process.env.RECAPTCHA_SECRET,
+          response: recaptchaToken,
+        },
+      }
+    );
+
+    const { success, score } = response.data;
+
+    if (!success) {
+      return res.status(400).json({ error: "reCAPTCHA verification error!" });
+    }
+
+    next();
+  } catch (error) {
+    console.error("recaptcha verification error: ", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// comment this on prod
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(
