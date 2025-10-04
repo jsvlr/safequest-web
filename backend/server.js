@@ -18,30 +18,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from frontend
 app.use(express.static(path.join(__dirname, "../frontend/public")));
-
-// Basic test route
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Server is working!" });
-});
-
-// Auth routes (simplified for now)
-app.post("/api/auth/verify", (req, res) => {
-  // Temporary mock response
-  res.json({
-    success: true,
-    message: "Auth verification endpoint",
-  });
-});
-
-// API routes
-app.get("/api/data", (req, res) => {
-  res.json({
-    data: "Sample data from Express server",
-    timestamp: new Date().toISOString(),
-  });
-});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
