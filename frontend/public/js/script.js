@@ -8,22 +8,28 @@ passwordHelper.textContent = "";
 
 let isPasswordValid = false;
 
-forms.forEach((form) => {
-  form.addEventListener(
-    "submit",
-    (ev) => {
-      if (!form.checkValidity()) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-      }
-      form.classList.add("was-validated");
-    },
-    false
-  );
-});
+// forms.forEach((form) => {
+//   form.addEventListener(
+//     "submit",
+//     (ev) => {
+//       if (!form.checkValidity()) {
+//         ev.preventDefault();
+//         ev.stopImmediatePropagation();
+//       }
+//       form.classList.add("was-validated");
+//     },
+//     false
+//   );
+// });
 
 registrationForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  if (!registrationForm.checkValidity()) {
+    e.stopImmediatePropagation();
+    registrationForm.classList.add("was-validated");
+    return;
+  }
 
   const formData = new FormData(e.target);
   const recaptchaToken = grecaptcha.getResponse();
@@ -37,6 +43,8 @@ registrationForm.addEventListener("submit", async (e) => {
     });
     return;
   }
+
+  verifyStrongPassword(formData.get("password"));
 
   if (
     !isPasswordValid ||
@@ -56,9 +64,7 @@ registrationForm.addEventListener("submit", async (e) => {
     email: formData.get("email"),
     password: formData.get("password"),
     username: formData.get("username"),
-    gender: ["male", "female"].includes(formData.get("gender"))
-      ? "male"
-      : formData.get("gender"),
+    gender: formData.get("gender"),
     recaptchaToken: recaptchaToken,
   };
 
@@ -77,8 +83,13 @@ registrationForm.addEventListener("submit", async (e) => {
       Swal.fire({
         icon: "success",
         title: "Process successful",
+        confirmButtonText: "View Gmail Inbox",
         text: result.message,
         showCancelButton: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "https://mail.google.com";
+        }
       });
     } else {
       Swal.fire({

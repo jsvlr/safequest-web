@@ -76,13 +76,13 @@ app.post("/register", verifyRecaptcha, async (req, res) => {
         level: 1,
         score: 0,
         createdAt: admin.database.ServerValue.TIMESTAMP,
-        updatedAt: admin.firestore.ServerValue.TIMESTAMP,
-        lastLogin: admin.firestore.ServerValue.TIMESTAMP,
+        updatedAt: admin.database.ServerValue.TIMESTAMP,
+        lastLogin: admin.database.ServerValue.TIMESTAMP,
       });
 
     const actionCodeSettings = {
-      url: "https://safequest-db.web.app/",
-      handleCodeInApp: false,
+      url: "https://safequest-db.web.app",
+      handleCodeInApp: true,
     };
 
     const link = await admin
@@ -95,12 +95,26 @@ app.post("/register", verifyRecaptcha, async (req, res) => {
       message: "User registered and Email verification has been sent!",
     });
   } catch (error) {
-    console.error("error: ", error);
+    console.error("Registration error: ", error);
+
     switch (error.code) {
       case "auth/email-already-exists":
-        return res.status(400).json({ message: "Email is already used!" });
+        return res
+          .status(400)
+          .json({ message: "Email is already registered!" });
+      case "auth/invalid-email":
+        return res.status(400).json({ message: "Invalid email address!" });
+      case "auth/weak-password":
+        return res.status(400).json({ message: "Password is too weak!" });
+      case "auth/operation-not-allowed":
+        return res.status(400).json({
+          message:
+            "Email/password accounts are not enabled. Please contact support.",
+        });
       default:
-        return res.status(500).json({ message: `Failed to create user` });
+        return res.status(500).json({
+          message: "Failed to create user account. Please try again.",
+        });
     }
   }
 });
