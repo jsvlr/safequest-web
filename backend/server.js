@@ -106,12 +106,12 @@ app.post("/register", verifyRecaptcha, async (req, res) => {
 });
 
 // comment this on production
-// app.listen(PORT, () => {
-//   console.log(`Server running on http://localhost:${PORT}`);
-//   console.log(
-//     "Environment loaded:",
-//     process.env.FIREBASE_PROJECT_ID
-//       ? "Firebase config found"
-//       : "No Firebase config"
-//   );
-// });
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(
+    "Environment loaded:",
+    process.env.FIREBASE_PROJECT_ID
+      ? "Firebase config found"
+      : "No Firebase config"
+  );
+});
