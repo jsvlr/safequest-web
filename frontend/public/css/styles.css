@@ -12,3 +12,9 @@ input::placeholder {
 .poppin {
   font-family: "Poppins", sans-serif !important;
 }
+
+.my-swal-popup {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}

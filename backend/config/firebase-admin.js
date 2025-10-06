@@ -18,7 +18,11 @@ const serviceAccount = {
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`,
+  databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com/`,
 });
 
+admin.firestore().settings({
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  ignoreUndefinedProperties: true,
+});
 export default admin;
