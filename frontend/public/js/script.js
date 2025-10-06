@@ -8,6 +8,13 @@ passwordHelper.textContent = "";
 
 let isPasswordValid = false;
 
+const isDevelopment =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+const API_BASE_URL = isDevelopment
+  ? "http://localhost:5001/your-project-id/us-central1/api"
+  : "https://us-central1-your-project-id.cloudfunctions.net/api";
+
 // forms.forEach((form) => {
 //   form.addEventListener(
 //     "submit",
@@ -69,7 +76,9 @@ registrationForm.addEventListener("submit", async (e) => {
   };
 
   try {
-    const response = await fetch("/register", {
+    console.log("Sending request to:", `${API_BASE_URL}/register`);
+
+    const response = await fetch(`${API_BASE_URL}/register`, {
       method: "POST",
       headers: {
         "Content-type": "application/json",
