@@ -227,15 +227,15 @@
 
     <script>
       // prevent inspect element
-      // document.addEventListener("contextmenu", (e) => e.preventDefault());
-      // document.onkeydown = (e) => {
-      //   if (
-      //     e.keyCode === 123 ||
-      //     (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))
-      //   ) {
-      //     return false;
-      //   }
-      // };
+      document.addEventListener("contextmenu", (e) => e.preventDefault());
+      document.onkeydown = (e) => {
+        if (
+          e.keyCode === 123 ||
+          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))
+        ) {
+          return false;
+        }
+      };
     </script>
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
