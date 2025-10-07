@@ -1,125 +1,222 @@
-const registrationForm = document.getElementById("registration-form");
-const forms = document.querySelectorAll(".needs-validation");
-const passwordInput = document.getElementById("password");
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
+import { getDatabase, ref, set } from "firebase/database";
 
+// Your Firebase config (from Firebase Console > Project Settings)
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDre7rAa9ZpjFsCPy0_yZWRLIS3xgSWIQo",
+  authDomain: "safequest-db.firebaseapp.com",
+  databaseURL: "https://safequest-db-default-rtdb.firebaseio.com",
+  projectId: "safequest-db",
+  storageBucket: "safequest-db.firebasestorage.app",
+  messagingSenderId: "688619850297",
+  appId: "1:688619850297:web:2f13a361ffb5235db69be8",
+  measurementId: "G-5NRJHMP13D",
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const database = getDatabase(app);
+
+const registrationForm = document.getElementById("registration-form");
+const passwordInput = document.getElementById("password");
 const passwordHelper = document.getElementById("password-helper");
 
 passwordHelper.textContent = "";
-
 let isPasswordValid = false;
-
-const isDevelopment =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1";
-const API_BASE_URL = isDevelopment
-  ? "http://localhost:5001/your-project-id/us-central1/api"
-  : "https://us-central1-your-project-id.cloudfunctions.net/api";
-
-// forms.forEach((form) => {
-//   form.addEventListener(
-//     "submit",
-//     (ev) => {
-//       if (!form.checkValidity()) {
-//         ev.preventDefault();
-//         ev.stopImmediatePropagation();
-//       }
-//       form.classList.add("was-validated");
-//     },
-//     false
-//   );
-// });
 
 registrationForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  // Check form validity
   if (!registrationForm.checkValidity()) {
     e.stopImmediatePropagation();
     registrationForm.classList.add("was-validated");
     return;
   }
 
-  const formData = new FormData(e.target);
+  // Check reCAPTCHA
+  if (typeof grecaptcha === "undefined") {
+    showAlert(
+      "error",
+      "reCAPTCHA Error",
+      "reCAPTCHA not loaded. Please refresh the page."
+    );
+    return;
+  }
+
   const recaptchaToken = grecaptcha.getResponse();
-
   if (!recaptchaToken) {
-    Swal.fire({
-      icon: "warning",
-      title: "Recaptcha failed",
-      text: "please validated the recaptcha before submitting.",
-      showCancelButton: true,
-    });
+    showAlert(
+      "warning",
+      "reCAPTCHA Required",
+      "Please complete the reCAPTCHA validation."
+    );
     return;
   }
 
-  verifyStrongPassword(formData.get("password"));
+  const formData = new FormData(e.target);
+  const password = formData.get("password");
+  const confirmPassword = formData.get("password-confirm");
 
-  if (
-    !isPasswordValid ||
-    formData.get("password") !== formData.get("password-confirm")
-  ) {
-    Swal.fire({
-      icon: "warning",
-      title: "Invalid password",
-      text: "please check your password input",
-      showCancelButton: true,
-      backdrop: true,
-    });
+  // Validate password
+  verifyStrongPassword(password);
+
+  if (!isPasswordValid || password !== confirmPassword) {
+    showAlert(
+      "warning",
+      "Invalid Password",
+      "Please check your password requirements and confirmation."
+    );
     return;
   }
 
+  // Get form data
   const userData = {
     email: formData.get("email"),
-    password: formData.get("password"),
+    password: password,
     username: formData.get("username"),
     gender: formData.get("gender"),
-    recaptchaToken: recaptchaToken,
   };
 
-  try {
-    console.log("Sending request to:", `${API_BASE_URL}/register`);
-
-    const response = await fetch(`${API_BASE_URL}/register`, {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify(userData),
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      Swal.fire({
-        icon: "success",
-        title: "Process successful",
-        confirmButtonText: "View Gmail Inbox",
-        text: result.message,
-        showCancelButton: true,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = "https://mail.google.com";
-        }
-      });
-    } else {
-      Swal.fire({
-        icon: "error",
-        title: "Process failed",
-        text: result.message,
-        showCancelButton: true,
-      });
-    }
-    grecaptcha.reset();
-  } catch (error) {
-    console.error("error: ", error);
-    grecaptcha.reset();
-  }
+  // Register user
+  await registerUser(userData);
 });
 
+async function registerUser(userData) {
+  try {
+    showLoadingAlert(
+      "Registering...",
+      "Please wait while we create your account."
+    );
+
+    // 1. Create user with Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      userData.email,
+      userData.password
+    );
+
+    const user = userCredential.user;
+
+    // 2. Store user profile in Realtime Database
+    await set(ref(database, "players/" + user.uid), {
+      username: userData.username,
+      gender: userData.gender,
+      email: userData.email,
+      isCurrentPlayer: false,
+      level: 1,
+      score: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      lastLogin: Date.now(),
+    });
+
+    // 3. Send email verification
+    await sendEmailVerification(user);
+
+    // 4. Update user profile with display name
+    await updateProfile(user, {
+      displayName: userData.username,
+    });
+
+    // Success
+    Swal.fire({
+      icon: "success",
+      title: "Registration Successful!",
+      html: `
+        <p>Welcome, ${userData.username}!</p>
+        <p>We've sent a verification email to <strong>${userData.email}</strong>.</p>
+        <p>Please check your inbox and verify your email address.</p>
+      `,
+      confirmButtonText: "Got it!",
+    });
+
+    // Reset form
+    registrationForm.reset();
+    registrationForm.classList.remove("was-validated");
+  } catch (error) {
+    console.error("Registration error:", error);
+    handleRegistrationError(error);
+  } finally {
+    // Reset reCAPTCHA
+    if (typeof grecaptcha !== "undefined") {
+      grecaptcha.reset();
+    }
+  }
+}
+
+function handleRegistrationError(error) {
+  let errorMessage = "Registration failed. Please try again.";
+
+  switch (error.code) {
+    case "auth/email-already-in-use":
+      errorMessage =
+        "This email is already registered. Please use a different email or try logging in.";
+      break;
+    case "auth/invalid-email":
+      errorMessage =
+        "The email address is not valid. Please check and try again.";
+      break;
+    case "auth/weak-password":
+      errorMessage =
+        "The password is too weak. Please choose a stronger password.";
+      break;
+    case "auth/network-request-failed":
+      errorMessage =
+        "Network error. Please check your internet connection and try again.";
+      break;
+    case "auth/too-many-requests":
+      errorMessage = "Too many attempts. Please try again later.";
+      break;
+    case "database/permission-denied":
+      errorMessage =
+        "Permission denied. Please refresh the page and try again.";
+      break;
+  }
+
+  Swal.fire({
+    icon: "error",
+    title: "Registration Failed",
+    text: errorMessage,
+    confirmButtonText: "Try Again",
+  });
+}
+
+function showLoadingAlert(title, text) {
+  Swal.fire({
+    title: title,
+    text: text,
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+}
+
+function showAlert(icon, title, text) {
+  Swal.fire({
+    icon: icon,
+    title: title,
+    text: text,
+    confirmButtonText: "OK",
+  });
+}
+
+// Your existing password validation function
 function verifyStrongPassword(password) {
   const validChar = 8;
   passwordHelper.textContent = "";
+  isPasswordValid = false;
+
   if (password.length < validChar) {
-    passwordHelper.textContent = "password must be at least 8 charactes long.";
+    passwordHelper.textContent = "Password must be at least 8 characters long.";
     return;
   }
 
@@ -144,6 +241,8 @@ function verifyStrongPassword(password) {
   }
 
   isPasswordValid = true;
+  passwordHelper.textContent = "✓ Password is strong";
+  passwordHelper.style.color = "green";
 }
 
 passwordInput.addEventListener("input", (e) => {
