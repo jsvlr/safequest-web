@@ -6,8 +6,6 @@ import {
 } from "firebase/auth";
 import { getDatabase, ref, set } from "firebase/database";
 
-// Your Firebase config (from Firebase Console > Project Settings)
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDre7rAa9ZpjFsCPy0_yZWRLIS3xgSWIQo",
   authDomain: "safequest-db.firebaseapp.com",

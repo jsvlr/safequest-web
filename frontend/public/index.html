@@ -5,7 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SafeQuest | Emegency Evacuation Adventure</title>
     <!-- In your head section -->
-    <script type="module" src="js/script.js"></script>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+      import {
+        getAuth,
+        createUserWithEmailAndPassword,
+        sendEmailVerification,
+        updateProfile,
+      } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+      import {
+        getDatabase,
+        ref,
+        set,
+      } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+      // Your Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDre7rAa9ZpjFsCPy0_yZWRLIS3xgSWIQo",
+        authDomain: "safequest-db.firebaseapp.com",
+        databaseURL: "https://safequest-db-default-rtdb.firebaseio.com",
+        projectId: "safequest-db",
+        storageBucket: "safequest-db.firebasestorage.app",
+        messagingSenderId: "688619850297",
+        appId: "1:688619850297:web:2f13a361ffb5235db69be8",
+        measurementId: "G-5NRJHMP13D",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
     </script>
     <!-- Bootstrap -->
     <link
@@ -214,5 +241,6 @@
     ></script>
     <!-- SweetAlert v2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="js/script.js"></script>
   </body>
 </html>
