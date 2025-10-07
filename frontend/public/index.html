@@ -53,12 +53,7 @@
     >
       <main class="shadow rounded-2 bg-white" style="width: 400px">
         <div
-          class="d-flex justify-content-center align-items-center gap-2 p-3 text-light rounded-top-3"
-          style="
-            background-image: url('images/header-background.jpg');
-            background-repeat: no-repeat;
-            background-size: cover;
-          "
+          class="d-flex justify-content-center align-items-center gap-2 p-3 rounded-top-3"
         >
           <div>
             <img
@@ -73,6 +68,8 @@
             <span class="h6 mt-0">Emegency Evacuation Adventure</span>
           </div>
         </div>
+        <hr class="hr mt-0" />
+
         <form
           method="POST"
           class="p-4 needs-validation"
@@ -80,7 +77,7 @@
           id="registration-form"
         >
           <div class="mb-3">
-            <div class="row gx-2">
+            <div class="row gx-md-2 gx-1">
               <div class="col-7">
                 <label for="username" class="form-label opacity-75 small"
                   >Username</label
@@ -149,11 +146,19 @@
               <input
                 type="password"
                 name="password"
-                class="form-control px-4 py-2 border-start-0 shadow-none"
+                class="form-control px-4 py-2 border-start-0 border-end-0 shadow-none"
                 id="password"
                 style="letter-spacing: 2px"
                 required
               />
+              <span
+                class="input-group-text border-start-0 bg-white password-toggle"
+                type="button"
+                data-toggle-name="password"
+                ><i
+                  class="fa-regular fa-eye opacity-50 password-toggle-icon"
+                ></i
+              ></span>
             </div>
             <div class="text-end text-dark-subtle">
               <span
@@ -174,11 +179,19 @@
               <input
                 type="password"
                 name="password-confirm"
-                class="form-control px-4 py-2 border-start-0 shadow-none"
+                class="form-control px-4 py-2 border-start-0 border-end-0 shadow-none"
                 id="password-confirm"
                 style="letter-spacing: 2px"
                 required
               />
+              <span
+                class="input-group-text border-start-0 bg-white password-toggle"
+                type="button"
+                data-toggle-name="password-confirm"
+                ><i
+                  class="fa-regular fa-eye opacity-50 password-toggle-icon"
+                ></i
+              ></span>
             </div>
           </div>
 
@@ -214,15 +227,15 @@
 
     <script>
       // prevent inspect element
-      document.addEventListener("contextmenu", (e) => e.preventDefault());
-      document.onkeydown = (e) => {
-        if (
-          e.keyCode === 123 ||
-          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))
-        ) {
-          return false;
-        }
-      };
+      // document.addEventListener("contextmenu", (e) => e.preventDefault());
+      // document.onkeydown = (e) => {
+      //   if (
+      //     e.keyCode === 123 ||
+      //     (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))
+      //   ) {
+      //     return false;
+      //   }
+      // };
     </script>
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
@@ -257,8 +270,11 @@
       const registrationForm = document.getElementById("registration-form");
       const passwordInput = document.getElementById("password");
       const passwordHelper = document.getElementById("password-helper");
-
-      passwordHelper.textContent = "";
+      const passwordTogglers = document.querySelectorAll(".password-toggle");
+      const passwordIcon = {
+        hide: `fa-regular fa-eye opacity-50 password-toggle-icon`,
+        show: `fa-regular fa-eye-slash opacity-50 password-toggle-icon`,
+      };
       let isPasswordValid = false;
 
       registrationForm.addEventListener("submit", async (e) => {
@@ -479,6 +495,21 @@
 
       passwordInput.addEventListener("input", (e) => {
         verifyStrongPassword(e.target.value);
+      });
+
+      passwordTogglers.forEach((toggle) => {
+        toggle.addEventListener("click", (e) => {
+          e.preventDefault();
+          console.log(toggle);
+          let icon = toggle.querySelector(`.password-toggle-icon`);
+          let nameAttr = toggle.getAttribute("data-toggle-name");
+          let password = document.querySelector(`input[name='${nameAttr}']`);
+          icon.classList =
+            password.type == "password"
+              ? passwordIcon["show"]
+              : passwordIcon["hide"];
+          password.type = password.type == "password" ? "text" : "password";
+        });
       });
     </script>
   </body>
